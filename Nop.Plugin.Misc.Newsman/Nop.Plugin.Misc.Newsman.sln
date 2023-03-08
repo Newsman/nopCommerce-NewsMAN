@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 25.0.1704.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nop.Core", "..\..\nopCommerce-develop\src\Libraries\Nop.Core\Nop.Core.csproj", "{7944190F-3E45-49E8-B9DA-9603833F686A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nop.Data", "..\..\nopCommerce-develop\src\Libraries\Nop.Data\Nop.Data.csproj", "{EB0F4615-62B2-42C3-9A21-CC481D874E1E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nop.Services", "..\..\nopCommerce-develop\src\Libraries\Nop.Services\Nop.Services.csproj", "{68DE39B5-13B1-4D4C-86C5-7BB52B5B300F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nop.Web.Framework", "..\..\nopCommerce-develop\src\Presentation\Nop.Web.Framework\Nop.Web.Framework.csproj", "{E62D4442-00BF-46FF-8839-2A5B677DF917}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nop.Plugin.Misc.Newsman", "Nop.Plugin.Misc.Newsman.csproj", "{772C148D-641F-4C6B-BB6A-40411454860F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testing", "Testing\Testing\Testing.csproj", "{4FDC54B3-70E9-4EE1-871C-A0CC0E5D9444}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7944190F-3E45-49E8-B9DA-9603833F686A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7944190F-3E45-49E8-B9DA-9603833F686A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7944190F-3E45-49E8-B9DA-9603833F686A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7944190F-3E45-49E8-B9DA-9603833F686A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB0F4615-62B2-42C3-9A21-CC481D874E1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB0F4615-62B2-42C3-9A21-CC481D874E1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB0F4615-62B2-42C3-9A21-CC481D874E1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB0F4615-62B2-42C3-9A21-CC481D874E1E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68DE39B5-13B1-4D4C-86C5-7BB52B5B300F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68DE39B5-13B1-4D4C-86C5-7BB52B5B300F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68DE39B5-13B1-4D4C-86C5-7BB52B5B300F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68DE39B5-13B1-4D4C-86C5-7BB52B5B300F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E62D4442-00BF-46FF-8839-2A5B677DF917}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E62D4442-00BF-46FF-8839-2A5B677DF917}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E62D4442-00BF-46FF-8839-2A5B677DF917}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E62D4442-00BF-46FF-8839-2A5B677DF917}.Release|Any CPU.Build.0 = Release|Any CPU
+		{772C148D-641F-4C6B-BB6A-40411454860F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{772C148D-641F-4C6B-BB6A-40411454860F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{772C148D-641F-4C6B-BB6A-40411454860F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{772C148D-641F-4C6B-BB6A-40411454860F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FDC54B3-70E9-4EE1-871C-A0CC0E5D9444}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FDC54B3-70E9-4EE1-871C-A0CC0E5D9444}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FDC54B3-70E9-4EE1-871C-A0CC0E5D9444}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FDC54B3-70E9-4EE1-871C-A0CC0E5D9444}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0A169A5A-EA9B-4A80-A9F5-C54B8372F055}
+	EndGlobalSection
+EndGlobal

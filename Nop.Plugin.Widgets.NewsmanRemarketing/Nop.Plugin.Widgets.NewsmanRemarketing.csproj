@@ -1,0 +1,388 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Copyright>Dazoot</Copyright> 
+    <Company>Dazoot</Company> 
+    <Authors>Newsman</Authors> 
+    <PackageLicenseUrl></PackageLicenseUrl> 
+    <PackageProjectUrl></PackageProjectUrl> 
+    <RepositoryUrl>https://github.com/Newsman/nopCommerce-NewsMAN</RepositoryUrl> 
+    <RepositoryType></RepositoryType>
+    <OutputPath>$(OutputPath)</OutputPath>
+    <OutDir>$(OutputPath)</OutDir>
+    <!--Set this parameter to true to get the dlls copied from the NuGet cache to the output of your project.
+    You need to set this parameter to true if your plugin has a nuget package 
+    to ensure that the dlls copied from the NuGet cache to the output of your project-->
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <Configurations>Release;Debug</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>output</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="logo.jpg" />
+    <None Remove="plugin.json" />
+    <None Remove="Views\Configure.cshtml" />
+    <None Remove="Views\_ViewImports.cshtml" />
+    <None Remove="Widgets.NewsmanRemarketing\logo.jpg" />
+    <None Remove="Widgets.NewsmanRemarketing\Views\_ViewImports.cshtml" />
+    <None Remove="output\Nop.Web.pdb" />
+    <None Remove="output\Nop.Data.dll" />
+    <None Remove="output\Nop.Web.dll" />
+    <None Remove="output\Nop.Web.Framework.dll" />
+    <None Remove="output\Nop.Core.dll" />
+    <None Remove="output\Nop.Services.dll" />
+    <None Remove="output\Nop.Data.pdb" />
+    <None Remove="output\Nop.Web.Framework.pdb" />
+    <None Remove="output\Nop.Core.pdb" />
+    <None Remove="output\Nop.Services.pdb" />
+    <None Remove="output\Nop.Web.runtimeconfig.json" />
+    <None Remove="output\Nop.Web.staticwebassets.runtime.json" />
+    <None Remove="output\Nop.Web.deps.json" />
+    <None Remove="output\Nop.Web.runtimeconfig.dev.json" />
+    <None Remove="output\plugin.json" />
+    <None Remove="output\Nop.Web" />
+    <None Remove="output\Views\Configure.cshtml" />
+    <None Remove="output\logo.jpg" />
+    <None Remove="output\Views\_ViewImports.cshtml" />
+    <None Remove="output\Views\PublicInfo.cshtml" />
+    <None Remove="output\Nop.Plugin.Widgets.NewsmanRemarketing.deps.json" />
+    <None Remove="output\Nop.Plugin.Widgets.NewsmanRemarketing.dll" />
+    <None Remove="output\Nop.Plugin.Widgets.NewsmanRemarketing.pdb" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Antiforgery.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Authentication.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Authentication.OAuth.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Authentication.Cookies.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Authentication.Core.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Authentication.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Authorization.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Authorization.Policy.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Components.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Components.Authorization.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Components.Forms.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Components.Server.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Components.Web.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.CookiePolicy.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Cors.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Connections.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Cryptography.Internal.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.DataProtection.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.DataProtection.Extensions.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Diagnostics.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.DataProtection.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Diagnostics.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Diagnostics.HealthChecks.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.HostFiltering.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Hosting.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Hosting.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Hosting.Server.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Html.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Http.Connections.Common.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Http.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Http.Connections.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Http.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Http.Extensions.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Http.Results.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.HttpLogging.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Http.Features.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.HttpOverrides.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.HttpsPolicy.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Identity.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Mvc.Core.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Mvc.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Mvc.ApiExplorer.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Metadata.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Localization.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Localization.Routing.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Mvc.Cors.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Mvc.DataAnnotations.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Mvc.Formatters.Xml.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Mvc.Formatters.Json.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Mvc.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Mvc.Localization.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Mvc.RazorPages.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.RateLimiting.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.OutputCaching.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Mvc.ViewFeatures.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Mvc.Razor.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Mvc.TagHelpers.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Razor.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.RequestDecompression.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Razor.Runtime.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.ResponseCaching.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.ResponseCaching.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.ResponseCompression.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Rewrite.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Routing.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Server.IISIntegration.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Server.HttpSys.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Server.Kestrel.Core.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Server.IIS.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Routing.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Server.Kestrel.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Server.Kestrel.Transport.Quic.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.Session.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.SignalR.Common.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.SignalR.Core.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.SignalR.Protocols.Json.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.WebSockets.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.StaticFiles.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.SignalR.dll" />
+    <None Remove="output\refs\Microsoft.CSharp.dll" />
+    <None Remove="output\refs\Microsoft.AspNetCore.WebUtilities.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Caching.Memory.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Caching.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Configuration.Binder.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Configuration.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Configuration.CommandLine.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Configuration.EnvironmentVariables.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Configuration.Ini.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Configuration.Json.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Configuration.UserSecrets.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Configuration.KeyPerFile.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Configuration.FileExtensions.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Configuration.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Configuration.Xml.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.DependencyInjection.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Diagnostics.HealthChecks.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Features.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.FileProviders.Physical.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.FileSystemGlobbing.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.FileProviders.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.FileProviders.Composite.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.FileProviders.Embedded.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Hosting.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Hosting.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Http.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Localization.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Identity.Core.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Identity.Stores.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Logging.Abstractions.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Logging.Configuration.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Localization.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Logging.Console.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Logging.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Logging.Debug.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Logging.EventSource.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.ObjectPool.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Options.DataAnnotations.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Logging.TraceSource.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Logging.EventLog.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Options.ConfigurationExtensions.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.WebEncoders.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Primitives.dll" />
+    <None Remove="output\refs\Microsoft.Extensions.Options.dll" />
+    <None Remove="output\refs\Microsoft.Net.Http.Headers.dll" />
+    <None Remove="output\refs\Microsoft.VisualBasic.Core.dll" />
+    <None Remove="output\refs\Microsoft.JSInterop.dll" />
+    <None Remove="output\refs\Microsoft.Win32.Primitives.dll" />
+    <None Remove="output\refs\Microsoft.VisualBasic.dll" />
+    <None Remove="output\refs\mscorlib.dll" />
+    <None Remove="output\refs\netstandard.dll" />
+    <None Remove="output\refs\Microsoft.Win32.Registry.dll" />
+    <None Remove="output\refs\System.Buffers.dll" />
+    <None Remove="output\refs\System.Collections.Concurrent.dll" />
+    <None Remove="output\refs\System.AppContext.dll" />
+    <None Remove="output\refs\System.Collections.dll" />
+    <None Remove="output\refs\System.Collections.Immutable.dll" />
+    <None Remove="output\refs\System.Collections.Specialized.dll" />
+    <None Remove="output\refs\System.ComponentModel.Annotations.dll" />
+    <None Remove="output\refs\System.ComponentModel.DataAnnotations.dll" />
+    <None Remove="output\refs\System.Collections.NonGeneric.dll" />
+    <None Remove="output\refs\System.ComponentModel.dll" />
+    <None Remove="output\refs\System.ComponentModel.TypeConverter.dll" />
+    <None Remove="output\refs\System.ComponentModel.EventBasedAsync.dll" />
+    <None Remove="output\refs\System.Configuration.dll" />
+    <None Remove="output\refs\System.ComponentModel.Primitives.dll" />
+    <None Remove="output\refs\System.Core.dll" />
+    <None Remove="output\refs\System.Console.dll" />
+    <None Remove="output\refs\System.Data.dll" />
+    <None Remove="output\refs\System.Data.Common.dll" />
+    <None Remove="output\refs\System.Diagnostics.Contracts.dll" />
+    <None Remove="output\refs\System.Diagnostics.DiagnosticSource.dll" />
+    <None Remove="output\refs\System.Data.DataSetExtensions.dll" />
+    <None Remove="output\refs\System.Diagnostics.Debug.dll" />
+    <None Remove="output\refs\System.Diagnostics.EventLog.dll" />
+    <None Remove="output\refs\System.Diagnostics.Process.dll" />
+    <None Remove="output\refs\System.Diagnostics.FileVersionInfo.dll" />
+    <None Remove="output\refs\System.Diagnostics.StackTrace.dll" />
+    <None Remove="output\refs\System.Diagnostics.TextWriterTraceListener.dll" />
+    <None Remove="output\refs\System.Diagnostics.Tools.dll" />
+    <None Remove="output\refs\System.Dynamic.Runtime.dll" />
+    <None Remove="output\refs\System.dll" />
+    <None Remove="output\refs\System.Drawing.Primitives.dll" />
+    <None Remove="output\refs\System.Diagnostics.TraceSource.dll" />
+    <None Remove="output\refs\System.Drawing.dll" />
+    <None Remove="output\refs\System.Diagnostics.Tracing.dll" />
+    <None Remove="output\refs\System.Formats.Asn1.dll" />
+    <None Remove="output\refs\System.Globalization.dll" />
+    <None Remove="output\refs\System.Globalization.Calendars.dll" />
+    <None Remove="output\refs\System.Formats.Tar.dll" />
+    <None Remove="output\refs\System.Globalization.Extensions.dll" />
+    <None Remove="output\refs\System.IO.Compression.Brotli.dll" />
+    <None Remove="output\refs\System.IO.Compression.dll" />
+    <None Remove="output\refs\System.IO.Compression.ZipFile.dll" />
+    <None Remove="output\refs\System.IO.Compression.FileSystem.dll" />
+    <None Remove="output\refs\System.IO.dll" />
+    <None Remove="output\refs\System.IO.FileSystem.dll" />
+    <None Remove="output\refs\System.IO.FileSystem.AccessControl.dll" />
+    <None Remove="output\refs\System.IO.FileSystem.DriveInfo.dll" />
+    <None Remove="output\refs\System.IO.FileSystem.Primitives.dll" />
+    <None Remove="output\refs\System.IO.FileSystem.Watcher.dll" />
+    <None Remove="output\refs\System.IO.Pipelines.dll" />
+    <None Remove="output\refs\System.IO.IsolatedStorage.dll" />
+    <None Remove="output\refs\System.IO.MemoryMappedFiles.dll" />
+    <None Remove="output\refs\System.IO.Pipes.AccessControl.dll" />
+    <None Remove="output\refs\System.IO.Pipes.dll" />
+    <None Remove="output\refs\System.IO.UnmanagedMemoryStream.dll" />
+    <None Remove="output\refs\System.Linq.dll" />
+    <None Remove="output\refs\System.Linq.Parallel.dll" />
+    <None Remove="output\refs\System.Linq.Expressions.dll" />
+    <None Remove="output\refs\System.Linq.Queryable.dll" />
+    <None Remove="output\refs\System.Net.Http.dll" />
+    <None Remove="output\refs\System.Net.HttpListener.dll" />
+    <None Remove="output\refs\System.Net.Http.Json.dll" />
+    <None Remove="output\refs\System.Net.dll" />
+    <None Remove="output\refs\System.Memory.dll" />
+    <None Remove="output\refs\System.Net.Mail.dll" />
+    <None Remove="output\refs\System.Net.NameResolution.dll" />
+    <None Remove="output\refs\System.Net.Primitives.dll" />
+    <None Remove="output\refs\System.Net.Ping.dll" />
+    <None Remove="output\refs\System.Net.Quic.dll" />
+    <None Remove="output\refs\System.Net.NetworkInformation.dll" />
+    <None Remove="output\refs\System.Net.Requests.dll" />
+    <None Remove="output\refs\System.Net.ServicePoint.dll" />
+    <None Remove="output\refs\System.Net.Sockets.dll" />
+    <None Remove="output\refs\System.Net.WebClient.dll" />
+    <None Remove="output\refs\System.Net.Security.dll" />
+    <None Remove="output\refs\System.Net.WebHeaderCollection.dll" />
+    <None Remove="output\refs\System.Net.WebProxy.dll" />
+    <None Remove="output\refs\System.Net.WebSockets.Client.dll" />
+    <None Remove="output\refs\System.Net.WebSockets.dll" />
+    <None Remove="output\refs\System.Numerics.dll" />
+    <None Remove="output\refs\System.ObjectModel.dll" />
+    <None Remove="output\refs\System.Reflection.DispatchProxy.dll" />
+    <None Remove="output\refs\System.Numerics.Vectors.dll" />
+    <None Remove="output\refs\System.Reflection.dll" />
+    <None Remove="output\refs\System.Reflection.Emit.Lightweight.dll" />
+    <None Remove="output\refs\System.Reflection.Emit.dll" />
+    <None Remove="output\refs\System.Reflection.Emit.ILGeneration.dll" />
+    <None Remove="output\refs\System.Reflection.Extensions.dll" />
+    <None Remove="output\refs\System.Reflection.Metadata.dll" />
+    <None Remove="output\refs\System.Reflection.Primitives.dll" />
+    <None Remove="output\refs\System.Resources.Reader.dll" />
+    <None Remove="output\refs\System.Reflection.TypeExtensions.dll" />
+    <None Remove="output\refs\System.Resources.Writer.dll" />
+    <None Remove="output\refs\System.Runtime.CompilerServices.Unsafe.dll" />
+    <None Remove="output\refs\System.Runtime.dll" />
+    <None Remove="output\refs\System.Resources.ResourceManager.dll" />
+    <None Remove="output\refs\System.Runtime.Extensions.dll" />
+    <None Remove="output\refs\System.Runtime.CompilerServices.VisualC.dll" />
+    <None Remove="output\refs\System.Runtime.Handles.dll" />
+    <None Remove="output\refs\System.Runtime.InteropServices.dll" />
+    <None Remove="output\refs\System.Runtime.InteropServices.RuntimeInformation.dll" />
+    <None Remove="output\refs\System.Runtime.InteropServices.JavaScript.dll" />
+    <None Remove="output\refs\System.Runtime.Loader.dll" />
+    <None Remove="output\refs\System.Runtime.Numerics.dll" />
+    <None Remove="output\refs\System.Runtime.Intrinsics.dll" />
+    <None Remove="output\refs\System.Runtime.Serialization.dll" />
+    <None Remove="output\refs\System.Runtime.Serialization.Json.dll" />
+    <None Remove="output\refs\System.Runtime.Serialization.Xml.dll" />
+    <None Remove="output\refs\System.Runtime.Serialization.Primitives.dll" />
+    <None Remove="output\refs\System.Runtime.Serialization.Formatters.dll" />
+    <None Remove="output\refs\System.Security.AccessControl.dll" />
+    <None Remove="output\refs\System.Security.Claims.dll" />
+    <None Remove="output\refs\System.Security.Cryptography.Cng.dll" />
+    <None Remove="output\refs\System.Security.Cryptography.Algorithms.dll" />
+    <None Remove="output\refs\System.Security.Cryptography.Encoding.dll" />
+    <None Remove="output\refs\System.Security.Cryptography.Csp.dll" />
+    <None Remove="output\refs\System.Security.Cryptography.OpenSsl.dll" />
+    <None Remove="output\refs\System.Security.Cryptography.dll" />
+    <None Remove="output\refs\System.Security.Cryptography.X509Certificates.dll" />
+    <None Remove="output\refs\System.Security.Cryptography.Xml.dll" />
+    <None Remove="output\refs\System.Security.dll" />
+    <None Remove="output\refs\System.Security.Principal.Windows.dll" />
+    <None Remove="output\refs\System.Security.Principal.dll" />
+    <None Remove="output\refs\System.Security.Cryptography.Primitives.dll" />
+    <None Remove="output\refs\System.ServiceProcess.dll" />
+    <None Remove="output\refs\System.Text.Encoding.CodePages.dll" />
+    <None Remove="output\refs\System.Security.SecureString.dll" />
+    <None Remove="output\refs\System.ServiceModel.Web.dll" />
+    <None Remove="output\refs\System.Text.Encoding.dll" />
+    <None Remove="output\refs\System.Text.Encoding.Extensions.dll" />
+    <None Remove="output\refs\System.Threading.Overlapped.dll" />
+    <None Remove="output\refs\System.Threading.Channels.dll" />
+    <None Remove="output\refs\System.Text.Encodings.Web.dll" />
+    <None Remove="output\refs\System.Text.Json.dll" />
+    <None Remove="output\refs\System.Threading.dll" />
+    <None Remove="output\refs\System.Text.RegularExpressions.dll" />
+    <None Remove="output\refs\System.Threading.Tasks.dll" />
+    <None Remove="output\refs\System.Threading.RateLimiting.dll" />
+    <None Remove="output\refs\System.Threading.Tasks.Dataflow.dll" />
+    <None Remove="output\refs\System.Threading.Thread.dll" />
+    <None Remove="output\refs\System.Threading.Tasks.Parallel.dll" />
+    <None Remove="output\refs\System.Threading.Timer.dll" />
+    <None Remove="output\refs\System.Threading.ThreadPool.dll" />
+    <None Remove="output\refs\System.Transactions.dll" />
+    <None Remove="output\refs\System.ValueTuple.dll" />
+    <None Remove="output\refs\System.Web.dll" />
+    <None Remove="output\refs\System.Transactions.Local.dll" />
+    <None Remove="output\refs\System.Web.HttpUtility.dll" />
+    <None Remove="output\refs\System.Windows.dll" />
+    <None Remove="output\refs\System.Xml.dll" />
+    <None Remove="output\refs\System.Xml.Linq.dll" />
+    <None Remove="output\refs\System.Xml.Serialization.dll" />
+    <None Remove="output\refs\System.Xml.ReaderWriter.dll" />
+    <None Remove="output\refs\System.Xml.XDocument.dll" />
+    <None Remove="output\refs\System.Xml.XPath.XDocument.dll" />
+    <None Remove="output\refs\System.Xml.XmlDocument.dll" />
+    <None Remove="output\refs\WindowsBase.dll" />
+    <None Remove="output\refs\System.Xml.XPath.dll" />
+    <None Remove="output\refs\System.Xml.XmlSerializer.dll" />
+    <None Remove="output\refs\System.Threading.Tasks.Extensions.dll" />
+    <None Remove="Widgets.NewsmanRemarketing\Nop.Plugin.Widgets.NewsmanRemarketing.pdb" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="logo.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="plugin.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\Configure.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\PublicInfo.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\_ViewImports.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\nopCommerce-develop\src\Presentation\Nop.Web\Nop.Web.csproj" />
+  </ItemGroup>
+
+  <!-- This target execute after "Build" target -->
+  <ItemGroup>
+    <None Include="..\..\nopCommerce-develop\src\Build\ClearPluginAssemblies.proj">
+      <Link>ClearPluginAssemblies.proj</Link>
+    </None>
+  </ItemGroup>
+  <Target Name="NopTarget" AfterTargets="Build">
+    <!-- Delete unnecessary libraries from plugins path -->
+    <MSBuild Projects="@(ClearPluginAssemblies)" Properties="PluginPath=$(MSBuildProjectDirectory)\$(OutDir)" Targets="NopClear" />
+  </Target>
+
+</Project>

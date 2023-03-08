@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Misc",
+  "FriendlyName": "Newsman",
+  "SystemName": "Misc.Newsman",
+  "Version": "1.00",
+  "SupportedVersions": [ "4.60" ],
+  "Author": "newsman team",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Misc.Newsman.dll",
+  "Description": "This plugin allows to integrate with Newsman service"
+}
