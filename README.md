@@ -10,7 +10,8 @@
 - paste your API key and User ID (you can find those in your account section in NewsmanApp - https://www.newsman.com)
 
 ## Newsman & Newsman Remarketing plugin settings
-![image](https://user-images.githubusercontent.com/28097949/202709174-ad4d4c85-2776-4fad-8ce3-71e11673b22b.png)
+![image](https://github.com/Newsman/nopCommerce-NewsMAN/blob/main/Assets/newsman.png)
+![image](https://github.com/Newsman/nopCommerce-NewsMAN/blob/main/Assets/newsmanremarketing.png)
 
 # License
 
