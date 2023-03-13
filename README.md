@@ -3,6 +3,7 @@
 
 # Instalation
 
+- Download Install folder from Github repository
 - In your Nopcommerce admin panel, go to *Configuration > Plugins*, Click upload Plugins & Themes button", upload the archives one at a time.
 
 ## Activate the plugins
