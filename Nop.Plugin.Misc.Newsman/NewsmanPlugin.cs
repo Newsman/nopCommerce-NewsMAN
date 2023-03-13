@@ -63,11 +63,6 @@ namespace Nop.Plugin.Misc.Newsman
         /// <returns>A task that represents the asynchronous operation</returns>
         public override async Task InstallAsync()
         {
-            //settings
-            await _settingService.SaveSettingAsync(new NewsmanSettings
-            {
-            });
-
             await base.InstallAsync();
         }
 

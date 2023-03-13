@@ -1,0 +1,15 @@
+/Users/corodeanulucian/Downloads/Nop.Plugin.Misc.Newsman/Testing/Testing/bin/Release/net7.0/Testing
+/Users/corodeanulucian/Downloads/Nop.Plugin.Misc.Newsman/Testing/Testing/bin/Release/net7.0/Testing.deps.json
+/Users/corodeanulucian/Downloads/Nop.Plugin.Misc.Newsman/Testing/Testing/bin/Release/net7.0/Testing.runtimeconfig.json
+/Users/corodeanulucian/Downloads/Nop.Plugin.Misc.Newsman/Testing/Testing/bin/Release/net7.0/Testing.dll
+/Users/corodeanulucian/Downloads/Nop.Plugin.Misc.Newsman/Testing/Testing/bin/Release/net7.0/Testing.pdb
+/Users/corodeanulucian/Downloads/Nop.Plugin.Misc.Newsman/Testing/Testing/obj/Release/net7.0/Testing.csproj.AssemblyReference.cache
+/Users/corodeanulucian/Downloads/Nop.Plugin.Misc.Newsman/Testing/Testing/obj/Release/net7.0/Testing.GeneratedMSBuildEditorConfig.editorconfig
+/Users/corodeanulucian/Downloads/Nop.Plugin.Misc.Newsman/Testing/Testing/obj/Release/net7.0/Testing.AssemblyInfoInputs.cache
+/Users/corodeanulucian/Downloads/Nop.Plugin.Misc.Newsman/Testing/Testing/obj/Release/net7.0/Testing.AssemblyInfo.cs
+/Users/corodeanulucian/Downloads/Nop.Plugin.Misc.Newsman/Testing/Testing/obj/Release/net7.0/Testing.csproj.CoreCompileInputs.cache
+/Users/corodeanulucian/Downloads/Nop.Plugin.Misc.Newsman/Testing/Testing/obj/Release/net7.0/Testing.dll
+/Users/corodeanulucian/Downloads/Nop.Plugin.Misc.Newsman/Testing/Testing/obj/Release/net7.0/refint/Testing.dll
+/Users/corodeanulucian/Downloads/Nop.Plugin.Misc.Newsman/Testing/Testing/obj/Release/net7.0/Testing.pdb
+/Users/corodeanulucian/Downloads/Nop.Plugin.Misc.Newsman/Testing/Testing/obj/Release/net7.0/Testing.genruntimeconfig.cache
+/Users/corodeanulucian/Downloads/Nop.Plugin.Misc.Newsman/Testing/Testing/obj/Release/net7.0/ref/Testing.dll

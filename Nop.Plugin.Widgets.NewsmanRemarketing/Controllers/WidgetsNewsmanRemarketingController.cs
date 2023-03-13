@@ -113,30 +113,6 @@ namespace Nop.Plugin.Widgets.NewsmanRemarketing.Controllers
             return await Configure();
         }
 
-        public async Task<IActionResult> Cart()
-        {
-            var cart = new List<Cart>();
-
-            var shoppingCarts = _shoppingCartService.GetShoppingCartAsync(_workContext.GetCurrentCustomerAsync().Result, ShoppingCartType.ShoppingCart, _storeContext.GetActiveStoreScopeConfigurationAsync().Id).Result;
-
-            foreach (var sci in shoppingCarts)
-            {
-                var _product = await _productService.GetProductByIdAsync(sci.ProductId);
-
-                cart.Add(
-                    new Cart()
-                    {
-                        id = _product.Id,
-                        name = _product.Name,
-                        price = _product.Price,
-                        quantity = sci.Quantity
-                    }
-                );
-            }
-
-            return Ok(Newtonsoft.Json.JsonConvert.SerializeObject(cart));
-        }
-
         #endregion
     }
 }

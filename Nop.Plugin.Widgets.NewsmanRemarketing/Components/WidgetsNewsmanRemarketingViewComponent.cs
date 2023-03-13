@@ -446,12 +446,12 @@ namespace Nop.Plugin.Widgets.NewsmanRemarketing.Components
 
 		}
 
-		//Newsman remarketing auto events</script>";
+		//Newsman remarketing auto events";
 
             //ecommerce info
             var store = await _storeContext.GetCurrentStoreAsync();
             var settings = await _settingService.LoadSettingAsync<NewsmanRemarketingSettings>(store.Id);
-            if (order != null && !await _genericAttributeService.GetAttributeAsync<bool>(order, ORDER_ALREADY_PROCESSED_ATTRIBUTE_NAME))
+            if (order != null)
             {
                 var usCulture = new CultureInfo("en-US");
 
@@ -511,11 +511,9 @@ namespace Nop.Plugin.Widgets.NewsmanRemarketing.Components
                 analyticsEcommerceScript += "_nzm.run('send', 'pageview');";
 
                 analyticsTrackingScript += analyticsEcommerceScript;
-
-                await _genericAttributeService.SaveAttributeAsync(order, ORDER_ALREADY_PROCESSED_ATTRIBUTE_NAME, true);
             }
 
-            return analyticsTrackingScript;
+            return analyticsTrackingScript + "</script>";
         }
 
         #endregion
@@ -536,9 +534,13 @@ namespace Nop.Plugin.Widgets.NewsmanRemarketing.Components
                 if (controller == null || action == null)
                     return Content("");
 
-                //Special case, if we are in last step of checkout, we can use order total for conversion value
                 var isOrderCompletedPage = controller.ToString().Equals("checkout", StringComparison.InvariantCultureIgnoreCase) &&
                     action.ToString().Equals("completed", StringComparison.InvariantCultureIgnoreCase);
+
+				if(!isOrderCompletedPage)
+					isOrderCompletedPage = controller.ToString().Equals("order", StringComparison.InvariantCultureIgnoreCase) &&
+                    action.ToString().Equals("details", StringComparison.InvariantCultureIgnoreCase);
+
                 if (isOrderCompletedPage && _newsmanSettings.EnableEcommerce)
                 {
                     var lastOrder = await GetLastOrderAsync();
