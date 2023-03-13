@@ -14,6 +14,10 @@
 ![image](https://github.com/Newsman/nopCommerce-NewsMAN/blob/main/Assets/newsman.png)
 ![image](https://github.com/Newsman/nopCommerce-NewsMAN/blob/main/Assets/newsmanremarketing.png)
 
+# Testing Newsman Remarketing
+
+- Do not test logged in as ADMIN.
+
 # License
 
 This code is released under GPLv2 license
