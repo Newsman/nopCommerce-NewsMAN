@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Nop.Core;
+using Nop.Core.Domain.Cms;
 using Nop.Plugin.Widgets.NewsmanRemarketing.Components;
 using Nop.Services.Cms;
 using Nop.Services.Configuration;
@@ -16,6 +18,8 @@ namespace Nop.Plugin.Widgets.NewsmanRemarketing
     /// </summary>
     public class NewsmanRemarketingPlugin : BasePlugin, IWidgetPlugin
     {
+        private const string PluginSystemName = "Widgets.NewsmanRemarketing";
+
         #region Fields
 
         private readonly ILocalizationService _localizationService;
@@ -38,6 +42,29 @@ namespace Nop.Plugin.Widgets.NewsmanRemarketing
         #endregion
 
         #region Methods
+
+        private async Task EnsureWidgetIsActiveAsync(bool isActive)
+        {
+            var widgetSettings = await _settingService.LoadSettingAsync<WidgetSettings>();
+            widgetSettings.ActiveWidgetSystemNames ??= new List<string>();
+
+            if (isActive)
+            {
+                if (!widgetSettings.ActiveWidgetSystemNames.Any(systemName =>
+                        systemName.Equals(PluginSystemName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    widgetSettings.ActiveWidgetSystemNames.Add(PluginSystemName);
+                }
+            }
+            else
+            {
+                widgetSettings.ActiveWidgetSystemNames = widgetSettings.ActiveWidgetSystemNames
+                    .Where(systemName => !systemName.Equals(PluginSystemName, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            await _settingService.SaveSettingAsync(widgetSettings);
+        }
 
         /// <summary>
         /// Gets widget zones where this widget should be rendered
@@ -79,6 +106,7 @@ namespace Nop.Plugin.Widgets.NewsmanRemarketing
             {
             };
             await _settingService.SaveSettingAsync(settings);
+            await EnsureWidgetIsActiveAsync(true);
 
             await base.InstallAsync();
         }
@@ -91,6 +119,7 @@ namespace Nop.Plugin.Widgets.NewsmanRemarketing
         {
             //settings
             await _settingService.DeleteSettingAsync<NewsmanRemarketingSettings>();
+            await EnsureWidgetIsActiveAsync(false);
 
             //locales
             await _localizationService.DeleteLocaleResourcesAsync("Plugins.Widgets.NewsmanRemarketing");

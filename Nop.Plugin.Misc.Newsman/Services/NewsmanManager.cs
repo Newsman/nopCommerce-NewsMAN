@@ -168,7 +168,7 @@ namespace Nop.Plugin.Misc.Newsman.Services
             {
                 tempData.Add(_data);
 
-                if ((tempData.Count() & batchSize) == 0)
+                if ((tempData.Count() % batchSize) == 0)
                 {
                     message = ImportCSV(tempData, param);
 
@@ -221,7 +221,7 @@ namespace Nop.Plugin.Misc.Newsman.Services
                 {
                     customersDataTemp.Add(_customersData);
 
-                    if ((customersDataTemp.Count() & batchSize) == 0)
+                    if ((customersDataTemp.Count() % batchSize) == 0)
                     {
                         message = ImportCSV(customersDataTemp, param);
 
@@ -289,17 +289,17 @@ namespace Nop.Plugin.Misc.Newsman.Services
             return response;
         }
 
-        public async Task<Product> GetOrderItems(OrderItem item, string host)
+        public async Task<Product> GetOrderItems(OrderItem item, string baseUrl)
         {
             var product = await _productService.GetProductByIdAsync(item.ProductId);
 
             string imageUrl = "";
             var picture = await _pictureService.GetPicturesByProductIdAsync(product.Id);
-            if (picture != null || picture.Count > 0)
+            if (picture != null && picture.Count > 0)
                 imageUrl = await _pictureService.GetPictureUrlAsync(picture.FirstOrDefault().Id);
 
             var url = await _urlRecordRepository.GetSeNameAsync(product.Id, "Product");
-            url = "https://" + host + "/" + url;
+            url = baseUrl.TrimEnd('/') + "/" + url;
 
             return new Product()
             {

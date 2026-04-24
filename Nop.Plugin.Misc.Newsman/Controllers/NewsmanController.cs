@@ -19,6 +19,8 @@ using Nop.Web.Framework.Mvc.Filters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using Nop.Services.Catalog;
 using Product = Nop.Plugin.Misc.Newsman.Models.Product;
@@ -103,15 +105,77 @@ namespace Nop.Plugin.Misc.Newsman.Controllers
 
         #region Methods
 
-        [AuthorizeAdmin]
-        [Area(AreaNames.Admin)]
-        public async Task<IActionResult> Configure()
+        private string GetStoreBaseUrl()
         {
-            //load settings for a chosen store scope
-            var storeId = await _storeContext.GetActiveStoreScopeConfigurationAsync();
-            var newsmanSettings = await _settingService.LoadSettingAsync<NewsmanSettings>(storeId);
+            return $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}";
+        }
 
-            //prepare model
+        private string BuildProductFeedUrl(string apiKey)
+        {
+            if (string.IsNullOrWhiteSpace(apiKey))
+                return string.Empty;
+
+            return $"{GetStoreBaseUrl()}/Plugins/Newsman/Api?apikey={Uri.EscapeDataString(apiKey)}&type=products.json";
+        }
+
+        private bool IsPublicBaseUrl(string baseUrl)
+        {
+            if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri))
+                return false;
+
+            var host = uri.Host;
+            if (string.IsNullOrWhiteSpace(host))
+                return false;
+
+            if (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            if (IPAddress.TryParse(host, out var address))
+            {
+                if (IPAddress.IsLoopback(address))
+                    return false;
+
+                if (address.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    var bytes = address.GetAddressBytes();
+                    if (bytes[0] == 10 ||
+                        bytes[0] == 127 ||
+                        (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) ||
+                        (bytes[0] == 192 && bytes[1] == 168))
+                        return false;
+                }
+
+                if (address.AddressFamily == AddressFamily.InterNetworkV6)
+                {
+                    if (address.IsIPv6LinkLocal || address.IsIPv6SiteLocal)
+                        return false;
+
+                    var bytes = address.GetAddressBytes();
+                    if ((bytes[0] & 0xFE) == 0xFC)
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        private string GetFeedGenerationWarning(string baseUrl, string listId, string apiKey)
+        {
+            if (string.IsNullOrWhiteSpace(apiKey))
+                return "Product feed was not generated because the API key is empty.";
+
+            if (string.IsNullOrWhiteSpace(listId) || listId.Equals(Guid.Empty.ToString(), StringComparison.OrdinalIgnoreCase))
+                return "Product feed was not generated because no NewsMAN list is selected.";
+
+            if (!IsPublicBaseUrl(baseUrl))
+                return "The product feed URL is not publicly accessible. Automatic feed registration in NewsMAN works only when the store can be reached from the internet. Use a public website URL or a temporary tunnel.";
+
+            return null;
+        }
+
+        private async Task<ConfigurationModel> PrepareConfigurationModelAsync(NewsmanSettings newsmanSettings, int storeId, string feedGenerationStatus = null, string feedGenerationWarning = null)
+        {
+            var baseStoreUrl = GetStoreBaseUrl();
             var model = new ConfigurationModel
             {
                 UserId = newsmanSettings.UserId,
@@ -122,13 +186,17 @@ namespace Nop.Plugin.Misc.Newsman.Controllers
                 ListId_OverrideForStore = storeId > 0 && await _settingService.SettingExistsAsync(newsmanSettings, settings => settings.ListId, storeId),
                 SegmentId = newsmanSettings.SegmentId,
                 SegmentId_OverrideForStore = storeId > 0 && await _settingService.SettingExistsAsync(newsmanSettings, settings => settings.SegmentId, storeId),
-                ActiveStoreScopeConfiguration = storeId
+                ActiveStoreScopeConfiguration = storeId,
+                BaseStoreUrl = baseStoreUrl,
+                IsPublicBaseUrl = IsPublicBaseUrl(baseStoreUrl),
+                ProductFeedUrl = BuildProductFeedUrl(newsmanSettings.ApiKey),
+                FeedGenerationStatus = feedGenerationStatus,
+                FeedGenerationWarning = feedGenerationWarning
             };
 
             model.ImportType = newsmanSettings.ImportType ?? model.AvailableImportTypes.FirstOrDefault().Value;
             model.AllowApi = string.IsNullOrEmpty(newsmanSettings.AllowApi) ? model.AvailableApi.LastOrDefault().Value : newsmanSettings.AllowApi;
 
-            //prepare available lists
             if (!string.IsNullOrEmpty(newsmanSettings.ApiKey) && !string.IsNullOrEmpty(newsmanSettings.UserId))
                 model.AvailableLists = _newsmanManager.GetAvailableListsAsync() ?? new List<SelectListItem>();
 
@@ -143,10 +211,11 @@ namespace Nop.Plugin.Misc.Newsman.Controllers
                 defaultListId = Guid.Empty.ToString();
             }
             else if (string.IsNullOrEmpty(newsmanSettings.ListId) || newsmanSettings.ListId.Equals(Guid.Empty.ToString()))
+            {
                 defaultListId = model.AvailableLists.FirstOrDefault()?.Value;
+            }
 
-            //prepare available segments
-            if (!string.IsNullOrEmpty(newsmanSettings.ListId) || !newsmanSettings.ListId.Equals(Guid.Empty.ToString()))
+            if (!string.IsNullOrEmpty(newsmanSettings.ListId) && !newsmanSettings.ListId.Equals(Guid.Empty.ToString()))
                 model.AvailableSegments = _newsmanManager.GetAvailableSegmentsAsync() ?? new List<SelectListItem>();
 
             var defaultSegmentId = newsmanSettings.SegmentId;
@@ -160,9 +229,10 @@ namespace Nop.Plugin.Misc.Newsman.Controllers
                 defaultSegmentId = Guid.Empty.ToString();
             }
             else if (string.IsNullOrEmpty(newsmanSettings.SegmentId) || newsmanSettings.SegmentId.Equals(Guid.Empty.ToString()))
+            {
                 defaultSegmentId = model.AvailableSegments.FirstOrDefault()?.Value;
+            }
 
-            //set the default list & segment
             model.ListId = defaultListId;
             newsmanSettings.ListId = defaultListId;
             await _settingService.SaveSettingOverridablePerStoreAsync(newsmanSettings, settings => settings.ListId, model.ListId_OverrideForStore, storeId);
@@ -170,8 +240,24 @@ namespace Nop.Plugin.Misc.Newsman.Controllers
             newsmanSettings.SegmentId = defaultSegmentId;
             await _settingService.SaveSettingOverridablePerStoreAsync(newsmanSettings, settings => settings.SegmentId, model.SegmentId_OverrideForStore, storeId);
 
-            ViewData["syncUrlCron"] = "https://" + HttpContext.Request.Host.Value + "/Plugins/Newsman/Sync?apikey=" + model.ApiKey + "&listId=" + model.ListId + "&segmentId=" + model.SegmentId + "&limit=9000&cronLast=true";
-            ViewData["syncUrl"] = "https://" + HttpContext.Request.Host.Value + "/Plugins/Newsman/Sync?apikey=" + model.ApiKey + "&listId=" + model.ListId + "&segmentId=" + model.SegmentId;
+            ViewData["syncUrlCron"] = GetStoreBaseUrl() + "/Plugins/Newsman/Sync?apikey=" + model.ApiKey + "&listId=" + model.ListId + "&segmentId=" + model.SegmentId + "&limit=9000&cronLast=true";
+            ViewData["syncUrl"] = GetStoreBaseUrl() + "/Plugins/Newsman/Sync?apikey=" + model.ApiKey + "&listId=" + model.ListId + "&segmentId=" + model.SegmentId;
+
+            return model;
+        }
+
+        [AuthorizeAdmin]
+        [Area(AreaNames.Admin)]
+        public async Task<IActionResult> Configure()
+        {
+            //load settings for a chosen store scope
+            var storeId = await _storeContext.GetActiveStoreScopeConfigurationAsync();
+            var newsmanSettings = await _settingService.LoadSettingAsync<NewsmanSettings>(storeId);
+            var model = await PrepareConfigurationModelAsync(
+                newsmanSettings,
+                storeId,
+                TempData["NewsmanFeedStatus"] as string,
+                TempData["NewsmanFeedWarning"] as string);
 
             return View("~/Plugins/Misc.Newsman/Views/Configure.cshtml", model);
         }
@@ -190,8 +276,8 @@ namespace Nop.Plugin.Misc.Newsman.Controllers
             var newsmanSettings = await _settingService.LoadSettingAsync<NewsmanSettings>(storeId);
 
             //save settings
-            newsmanSettings.UserId = model.UserId.Trim();
-            newsmanSettings.ApiKey = model.ApiKey.Trim();
+            newsmanSettings.UserId = model.UserId?.Trim();
+            newsmanSettings.ApiKey = model.ApiKey?.Trim();
             newsmanSettings.ImportType = model.ImportType;
             newsmanSettings.AllowApi = model.AllowApi;
             newsmanSettings.ListId = model.ListId;
@@ -205,11 +291,30 @@ namespace Nop.Plugin.Misc.Newsman.Controllers
             await _settingService.SaveSettingOverridablePerStoreAsync(newsmanSettings, x => x.SegmentId, model.SegmentId_OverrideForStore, storeId, false);
             await _settingService.ClearCacheAsync();
 
-            var feedList = _newsmanManager.SetFeedList(newsmanSettings.ListId, "https://" + HttpContext.Request.Host.Value + "/Plugins/Newsman/Api?apikey=c5895eea62695519585a8ce7d0c40442&type=products.json", "https://" + HttpContext.Request.Host.Value);
+            var baseStoreUrl = GetStoreBaseUrl();
+            var productFeedUrl = BuildProductFeedUrl(newsmanSettings.ApiKey);
+            var feedWarning = GetFeedGenerationWarning(baseStoreUrl, newsmanSettings.ListId, newsmanSettings.ApiKey);
+            string feedStatus;
+
+            if (string.IsNullOrEmpty(feedWarning))
+            {
+                feedStatus = _newsmanManager.SetFeedList(newsmanSettings.ListId, productFeedUrl, baseStoreUrl);
+            }
+            else
+            {
+                feedStatus = "Automatic feed registration was skipped because the generated feed URL is not publicly accessible.";
+            }
 
             _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Admin.Plugins.Saved"));
 
-            return await Configure();
+            if (!string.IsNullOrWhiteSpace(feedWarning))
+                _notificationService.WarningNotification(feedWarning);
+
+            TempData["NewsmanFeedStatus"] = feedStatus;
+            TempData["NewsmanFeedWarning"] = feedWarning;
+
+            var configuredModel = await PrepareConfigurationModelAsync(newsmanSettings, storeId, feedStatus, feedWarning);
+            return View("~/Plugins/Misc.Newsman/Views/Configure.cshtml", configuredModel);
         }
 
         public async Task<IActionResult> Api(string apikey, string type, int? product_id, int? order_id, int? start = 1, int? limit = 1000)
@@ -252,7 +357,13 @@ namespace Nop.Plugin.Misc.Newsman.Controllers
                     foreach (var order in searchedOrder)
                     {
                         var address = await _addressService.GetAddressByIdAsync(order.BillingAddressId);
-                        var orderProducts = await (await _orderService.GetOrderItemsAsync(order.Id)).SelectAwait(async item => _newsmanManager.GetOrderItems(item, HttpContext.Request.Host.Value).Result).ToListAsync();
+                        var orderProducts = new List<Product>();
+                        var orderItems = await _orderService.GetOrderItemsAsync(order.Id);
+
+                        foreach (var item in orderItems)
+                        {
+                            orderProducts.Add(await _newsmanManager.GetOrderItems(item, GetStoreBaseUrl()));
+                        }
 
                         orders.Add(
                             new Order()
@@ -305,7 +416,7 @@ namespace Nop.Plugin.Misc.Newsman.Controllers
                         string imageUrl = await _pictureService.GetPictureUrlAsync(picture.FirstOrDefault().Id);
 
                         var url = await _urlRecordRepository.GetSeNameAsync(product.Id, "Product");
-                        url = "https://" + HttpContext.Request.Host.Value + "/" + url;
+                        url = GetStoreBaseUrl() + "/" + url;
 
                         products.Add(
                             new Product()
@@ -324,12 +435,16 @@ namespace Nop.Plugin.Misc.Newsman.Controllers
                     return Ok(Newtonsoft.Json.JsonConvert.SerializeObject(products, Newtonsoft.Json.Formatting.Indented));
                 case "customers.json":
 
-                    var customers = await (await _customerService.GetAllCustomersAsync()).Select(item => new Customer() { email = item.Email, first_name = item.FirstName, last_name = item.LastName }).ToListAsync();
+                    var customers = (await _customerService.GetAllCustomersAsync())
+                        .Select(item => new Customer() { email = item.Email, first_name = item.FirstName, last_name = item.LastName })
+                        .ToList();
 
                     return Ok(Newtonsoft.Json.JsonConvert.SerializeObject(customers, Newtonsoft.Json.Formatting.Indented));
                 case "subscribers.json":
 
-                    var subscribers = await (await _newsLetterSubscriptionService.GetAllNewsLetterSubscriptionsAsync()).Select(item => new Subscriber() { email = item.Email }).ToListAsync();
+                    var subscribers = (await _newsLetterSubscriptionService.GetAllNewsLetterSubscriptionsAsync())
+                        .Select(item => new Subscriber() { email = item.Email })
+                        .ToList();
 
                     return Ok(Newtonsoft.Json.JsonConvert.SerializeObject(subscribers, Newtonsoft.Json.Formatting.Indented));
             }
@@ -362,7 +477,9 @@ namespace Nop.Plugin.Misc.Newsman.Controllers
         {
             var cart = new List<Cart>();
 
-            var shoppingCarts = _shoppingCartService.GetShoppingCartAsync(_workContext.GetCurrentCustomerAsync().Result, ShoppingCartType.ShoppingCart, _storeContext.GetActiveStoreScopeConfigurationAsync().Id).Result;
+            var customer = await _workContext.GetCurrentCustomerAsync();
+            var store = await _storeContext.GetCurrentStoreAsync();
+            var shoppingCarts = await _shoppingCartService.GetShoppingCartAsync(customer, ShoppingCartType.ShoppingCart, store.Id);
 
             foreach (var sci in shoppingCarts)
             {
