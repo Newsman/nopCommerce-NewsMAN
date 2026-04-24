@@ -20,6 +20,20 @@
                     4. Get your API Key.
                 </p>
 
+                @if (!string.IsNullOrWhiteSpace(Model.FeedGenerationWarning))
+                {
+                    <div class="alert alert-warning">
+                        <strong>Feed warning:</strong> @Model.FeedGenerationWarning
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.FeedGenerationStatus))
+                {
+                    <div class="alert alert-info">
+                        <strong>Feed registration status:</strong> @Model.FeedGenerationStatus
+                    </div>
+                }
+
                 <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="UserId" />
@@ -79,6 +93,45 @@
                     <div class="col-md-9">
                         <nop-select asp-for="SegmentId" asp-items="Model.AvailableSegments" />
                         <span asp-validation-for="SegmentId"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <label class="control-label">Website URL</label>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="form-text-row">
+                            @Model.BaseStoreUrl
+                            @if (!Model.IsPublicBaseUrl)
+                            {
+                                <span class="text-warning">(public access required)</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <label class="control-label">Product feed URL</label>
+                    </div>
+                    <div class="col-md-9">
+                        @if (!string.IsNullOrWhiteSpace(Model.ProductFeedUrl))
+                        {
+                            <div class="form-text-row">
+                                <a href="@Model.ProductFeedUrl" target="_blank">@Model.ProductFeedUrl</a>
+                            </div>
+                            @if (!Model.IsPublicBaseUrl)
+                            {
+                                <div class="text-muted">
+                                    Automatic feed registration works only when this URL can be reached from the internet.
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="form-text-row">Save the API key first to generate the product feed URL.</div>
+                        }
                     </div>
                 </div>
 

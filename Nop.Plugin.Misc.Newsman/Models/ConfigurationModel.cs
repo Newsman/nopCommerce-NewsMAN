@@ -67,6 +67,12 @@ namespace Nop.Plugin.Misc.Newsman.Models
         public bool SegmentId_OverrideForStore { get; set; }
         public IList<SelectListItem> AvailableSegments { get; set; }
 
+        public string BaseStoreUrl { get; set; }
+        public bool IsPublicBaseUrl { get; set; }
+        public string ProductFeedUrl { get; set; }
+        public string FeedGenerationStatus { get; set; }
+        public string FeedGenerationWarning { get; set; }
+
         #endregion
     }
 }

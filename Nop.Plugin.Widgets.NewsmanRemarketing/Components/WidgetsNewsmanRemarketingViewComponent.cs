@@ -1,17 +1,16 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Nop.Core;
+using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Directory;
 using Nop.Core.Domain.Orders;
-using Nop.Plugin.Widgets.NewsmanRemarketing;
 using Nop.Services.Catalog;
-using Nop.Services.Common;
 using Nop.Services.Configuration;
-using Nop.Services.Customers;
 using Nop.Services.Directory;
 using Nop.Services.Logging;
 using Nop.Services.Orders;
@@ -23,14 +22,9 @@ namespace Nop.Plugin.Widgets.NewsmanRemarketing.Components
     {
         #region Fields
 
-        private const string ORDER_ALREADY_PROCESSED_ATTRIBUTE_NAME = "Newsman.OrderAlreadyProcessed";
-
         private readonly CurrencySettings _currencySettings;
-        private readonly NewsmanRemarketingSettings _newsmanSettings;
         private readonly ICategoryService _categoryService;
         private readonly ICurrencyService _currencyService;
-        private readonly ICustomerService _customerService;
-        private readonly IGenericAttributeService _genericAttributeService;
         private readonly ILogger _logger;
         private readonly IOrderService _orderService;
         private readonly IProductService _productService;
@@ -42,12 +36,10 @@ namespace Nop.Plugin.Widgets.NewsmanRemarketing.Components
 
         #region Ctor
 
-        public WidgetsNewsmanViewComponent(CurrencySettings currencySettings,
-            NewsmanRemarketingSettings newsmanSettings,
+        public WidgetsNewsmanViewComponent(
+            CurrencySettings currencySettings,
             ICategoryService categoryService,
             ICurrencyService currencyService,
-            ICustomerService customerService,
-            IGenericAttributeService genericAttributeService,
             ILogger logger,
             IOrderService orderService,
             IProductService productService,
@@ -56,11 +48,8 @@ namespace Nop.Plugin.Widgets.NewsmanRemarketing.Components
             IWorkContext workContext)
         {
             _currencySettings = currencySettings;
-            _newsmanSettings = newsmanSettings;
             _categoryService = categoryService;
             _currencyService = currencyService;
-            _customerService = customerService;
-            _genericAttributeService = genericAttributeService;
             _logger = logger;
             _orderService = orderService;
             _productService = productService;
@@ -78,430 +67,502 @@ namespace Nop.Plugin.Widgets.NewsmanRemarketing.Components
             if (string.IsNullOrEmpty(text))
                 return text;
 
-            //replace ' with \' (http://stackoverflow.com/questions/4292761/need-to-url-encode-labels-when-tracking-events-with-google-analytics)
-            text = text.Replace("'", "\\'");
-            return text;
+            return text
+                .Replace("\\", "\\\\")
+                .Replace("'", "\\'")
+                .Replace("\r", string.Empty)
+                .Replace("\n", "\\n");
         }
 
-        /// <returns>A task that represents the asynchronous operation</returns>
+        private async Task<NewsmanRemarketingSettings> GetCurrentSettingsAsync()
+        {
+            var store = await _storeContext.GetCurrentStoreAsync();
+            return await _settingService.LoadSettingAsync<NewsmanRemarketingSettings>(store.Id);
+        }
+
+        private async Task<string> GetCurrentCurrencyCodeAsync()
+        {
+            var currency = await _currencyService.GetCurrencyByIdAsync(_currencySettings.PrimaryStoreCurrencyId);
+            return currency?.CurrencyCode ?? "USD";
+        }
+
+        private string GetCurrentBaseUrl()
+        {
+            return $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}";
+        }
+
         private async Task<Order> GetLastOrderAsync()
         {
             var store = await _storeContext.GetCurrentStoreAsync();
             var customer = await _workContext.GetCurrentCustomerAsync();
-            var order = (await _orderService.SearchOrdersAsync(storeId: store.Id,
-                customerId: customer.Id, pageSize: 1)).FirstOrDefault();
-            return order;
+
+            return (await _orderService.SearchOrdersAsync(
+                storeId: store.Id,
+                customerId: customer.Id,
+                pageSize: 1)).FirstOrDefault();
         }
 
-        /// <returns>A task that represents the asynchronous operation</returns>
-        private async Task<string> GetEcommerceScriptAsync(Order order)
+        private static int? TryParseRouteInt(object value)
         {
-            var analyticsTrackingScript = @"<script>//Newsman remarketing tracking code REPLACEABLE
+            if (value is int intValue && intValue > 0)
+                return intValue;
 
-		var remarketingid = '" + _newsmanSettings.NewsmanRemarketingId + "';" +
-        @"var _nzmPluginInfo = '1.1:nopcommerce';
-		
-		//Newsman remarketing tracking code REPLACEABLE
+            if (value is string stringValue && int.TryParse(stringValue, out var parsed) && parsed > 0)
+                return parsed;
 
-		//Newsman remarketing tracking code  
+            return null;
+        }
 
-		var endpoint = 'https://retargeting.newsmanapp.com';
-		var remarketingEndpoint = endpoint + '/js/retargeting/track.js';
+        private static int? TryGetProductIdFromObject(object target, int depth = 0)
+        {
+            if (target == null || depth > 2)
+                return null;
 
-		var _nzm = _nzm || [];
-		var _nzm_config = _nzm_config || [];
-		_nzm_config['disable_datalayer'] = 1;
-		_nzm_tracking_server = endpoint;
-		(function() {
-			var a, methods, i;
-			a = function(f) {
-				return function() {
-					_nzm.push([f].concat(Array.prototype.slice.call(arguments, 0)));
-				}
-			};
-			methods = ['identify', 'track', 'run'];
-			for (i = 0; i < methods.length; i++) {
-				_nzm[methods[i]] = a(methods[i])
-			};
-			s = document.getElementsByTagName('script')[0];
-			var script_dom = document.createElement('script');
-			script_dom.async = true;
-			script_dom.id = 'nzm-tracker';
-			script_dom.setAttribute('data-site-id', remarketingid);
-			script_dom.src = remarketingEndpoint;
-			//check for engine name
-			if (_nzmPluginInfo.indexOf('shopify') !== -1) {
-				script_dom.onload = function(){
-					if (typeof newsmanRemarketingLoad === 'function')
-						newsmanRemarketingLoad();
-				}
-			}
-			s.parentNode.insertBefore(script_dom, s);
-		})();
-		_nzm.run('require', 'ec');
+            var targetType = target.GetType();
 
-		//Newsman remarketing tracking code     
-
-		//Newsman remarketing auto events REPLACEABLE
-
-		var ajaxurl = 'https://' + document.location.hostname + '/Plugins/Newsman/Cart?newsman=getCart.json';
-
-		//Newsman remarketing auto events REPLACEABLE
-
-		//Newsman remarketing auto events
-
-		var isProd = false;
-		let lastCart = sessionStorage.getItem('lastCart');
-		if (lastCart === null)
-			lastCart = {};
-		var lastCartFlag = false;
-		var firstLoad = true;
-		var bufferedXHR = false;
-		var unlockClearCart = true;
-		var isError = false;
-		let secondsAllow = 5;
-		let msRunAutoEvents = 5000;
-		let msClick = new Date();
-		var documentComparer = document.location.hostname;
-		var documentUrl = document.URL;
-		var sameOrigin = (documentUrl.indexOf(documentComparer) !== -1);
-		let startTime, endTime;
-		function startTimePassed() {
-			startTime = new Date();
-		}
-		;startTimePassed();
-		function endTimePassed() {
-			var flag = false;
-			endTime = new Date();
-			var timeDiff = endTime - startTime;
-			timeDiff /= 1000;
-			var seconds = Math.round(timeDiff);
-			if (firstLoad)
-				flag = true;
-			if (seconds >= secondsAllow)
-				flag = true;
-			return flag;
-		}
-		if (sameOrigin) {
-			NewsmanAutoEvents();
-			setInterval(NewsmanAutoEvents, msRunAutoEvents);
-			detectClicks();
-			detectXHR();
-		}
-		function timestampGenerator(min, max) {
-			min = Math.ceil(min);
-			max = Math.floor(max);
-			return Math.floor(Math.random() * (max - min + 1)) + min;
-		}
-		function NewsmanAutoEvents() {
-			if (!endTimePassed()) {
-				if (!isProd)
-					console.log('newsman remarketing: execution stopped at the beginning, ' + secondsAllow + ' seconds didnt pass between requests');
-				return;
-			}
-			if (isError && isProd == true) {
-				console.log('newsman remarketing: an error occurred, set isProd = false in console, script execution stopped;');
-				return;
-			}
-			let xhr = new XMLHttpRequest()
-			if (bufferedXHR || firstLoad) {
-				var paramChar = '?t=';
-				if (ajaxurl.indexOf('?') >= 0)
-					paramChar = '&t=';
-				var timestamp = paramChar + Date.now() + timestampGenerator(999, 999999999);
-				try {
-					xhr.open('GET', ajaxurl + timestamp, true);
-				} catch (ex) {
-					if (!isProd)
-						console.log('newsman remarketing: malformed XHR url');
-					isError = true;
-				}
-				startTimePassed();
-				xhr.onload = function() {
-					if (xhr.status == 200 || xhr.status == 201) {
-						try {
-							var response = JSON.parse(xhr.responseText);
-						} catch (error) {
-							if (!isProd)
-								console.log('newsman remarketing: error occured json parsing response');
-							isError = true;
-							return;
-						}
-						//check for engine name
-						//if shopify
-						if (_nzmPluginInfo.indexOf('shopify') !== -1) {
-							if (!isProd)
-								console.log('newsman remarketing: shopify detected, products will be pushed with custom props');
-							var products = [];
-							if (response.item_count > 0) {
-								response.items.forEach(function(item) {
-									products.push({
-										'id': item.id,
-										'name': item.product_title,
-										'quantity': item.quantity,
-										'price': parseFloat(item.price)
-									});
-								});
-							}
-							response = products;
-						}
-						lastCart = JSON.parse(sessionStorage.getItem('lastCart'));
-						if (lastCart === null) {
-							lastCart = {};
-							if (!isProd)
-								console.log('newsman remarketing: lastCart === null');
-						}
-						//check cache
-						if (lastCart.length > 0 && lastCart != null && lastCart != undefined && response.length > 0 && response != null && response != undefined) {
-							var objComparer = response;
-							var missingProp = false;
-							lastCart.forEach(e=>{
-								if (!e.hasOwnProperty('name')) {
-									missingProp = true;
-								}
-							}
-							);
-							if (missingProp)
-								objComparer.forEach(function(v) {
-									delete v.name
-								});
-							if (JSON.stringify(lastCart) === JSON.stringify(objComparer)) {
-								if (!isProd)
-									console.log('newsman remarketing: cache loaded, cart is unchanged');
-								lastCartFlag = true;
-							} else {
-								lastCartFlag = false;
-								if (!isProd)
-									console.log('newsman remarketing: cache loaded, cart is changed');
-							}
-						}
-						if (response.length > 0 && lastCartFlag == false) {
-							nzmAddToCart(response);
-						}//send only when on last request, products existed
-						else if (response.length == 0 && lastCart.length > 0 && unlockClearCart) {
-							nzmClearCart();
-							if (!isProd)
-								console.log('newsman remarketing: clear cart sent');
-						} else {
-							if (!isProd)
-								console.log('newsman remarketing: request not sent');
-						}
-						firstLoad = false;
-						bufferedXHR = false;
-					} else {
-						if (!isProd)
-							console.log('newsman remarketing: response http status code is not 200');
-						isError = true;
-					}
-				}
-				try {
-					xhr.send(null);
-				} catch (ex) {
-					if (!isProd)
-						console.log('newsman remarketing: error on xhr send');
-					isError = true;
-				}
-			} else {
-				if (!isProd)
-					console.log('newsman remarketing: !buffered xhr || first load');
-			}
-		}
-		function nzmClearCart() {
-			_nzm.run('ec:setAction', 'clear_cart');
-			_nzm.run('send', 'event', 'detail view', 'click', 'clearCart');
-			sessionStorage.setItem('lastCart', JSON.stringify([]));
-			unlockClearCart = false;
-		}
-		function nzmAddToCart(response) {
-			_nzm.run('ec:setAction', 'clear_cart');
-			if (!isProd)
-				console.log('newsman remarketing: clear cart sent, add to cart function');
-			detailviewEvent(response);
-		}
-		function detailviewEvent(response) {
-			if (!isProd)
-				console.log('newsman remarketing: detailviewEvent execute');
-			_nzm.run('send', 'event', 'detail view', 'click', 'clearCart', null, function() {
-				if (!isProd)
-					console.log('newsman remarketing: executing add to cart callback');
-				var products = [];
-				for (var item in response) {
-					if (response[item].hasOwnProperty('id')) {
-						_nzm.run('ec:addProduct', response[item]);
-						products.push(response[item]);
-					}
-				}
-				_nzm.run('ec:setAction', 'add');
-				_nzm.run('send', 'event', 'UX', 'click', 'add to cart');
-				sessionStorage.setItem('lastCart', JSON.stringify(products));
-				unlockClearCart = true;
-				if (!isProd)
-					console.log('newsman remarketing: cart sent');
-			});
-		}
-		function detectClicks() {
-			window.addEventListener('click', function(event) {
-				msClick = new Date();
-			}, false);
-		}
-		function detectXHR() {
-			var proxied = window.XMLHttpRequest.prototype.send;
-			window.XMLHttpRequest.prototype.send = function() {
-				var pointer = this;
-				var validate = false;
-				var timeValidate = false;
-				var intervalId = window.setInterval(function() {
-					if (pointer.readyState != 4) {
-						return;
-					}
-					var msClickPassed = new Date();
-					var timeDiff = msClickPassed.getTime() - msClick.getTime();
-					if (timeDiff > 1000) {
-						validate = false;
-					} else {
-						timeValidate = true;
-					}
-					var _location = pointer.responseURL;
-					//own request exclusion
-					if (timeValidate) {
-						if (_location.indexOf('getCart.json') >= 0 || //magento 2.x
-						_location.indexOf('/static/') >= 0 || _location.indexOf('/pub/static') >= 0 || _location.indexOf('/customer/section') >= 0 || //opencart 1
-						_location.indexOf('getCart=true') >= 0 || //shopify
-						_location.indexOf('cart.js') >= 0) {
-							validate = false;
-						} else {
-							//check for engine name
-							if (_nzmPluginInfo.indexOf('shopify') !== -1) {
-								validate = true;
-							} else {
-								if (_location.indexOf(window.location.origin) !== -1)
-									validate = true;
-							}
-						}
-						if (validate) {
-							bufferedXHR = true;
-							if (!isProd)
-								console.log('newsman remarketing: ajax request fired and catched from same domain, NewsmanAutoEvents called');
-							NewsmanAutoEvents();
-						}
-					}
-					clearInterval(intervalId);
-				}, 1);
-				return proxied.apply(this, [].slice.call(arguments));
-			}
-			;
-		}
-
-		//Newsman remarketing auto events";
-
-            //ecommerce info
-            var store = await _storeContext.GetCurrentStoreAsync();
-            var settings = await _settingService.LoadSettingAsync<NewsmanRemarketingSettings>(store.Id);
-            if (order != null)
+            foreach (var propertyName in new[] { "ProductId", "Id" })
             {
-                var usCulture = new CultureInfo("en-US");
+                var property = targetType.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public);
+                if (property == null || property.GetIndexParameters().Length > 0)
+                    continue;
 
-                var analyticsEcommerceScript = @"
-				{DETAILS}
-				_nzm.run('ec:setAction', 'purchase', {
-                    'id': '{ORDERID}',
-                    'affiliation': '{SITE}',
-                    'revenue': {TOTAL},
-                    'tax': {TAX},
-                    'shipping': {SHIP}
-                });";
-                analyticsEcommerceScript = analyticsEcommerceScript.Replace("{ORDERID}", FixIllegalJavaScriptChars(order.CustomOrderNumber));
-                analyticsEcommerceScript = analyticsEcommerceScript.Replace("{SITE}", FixIllegalJavaScriptChars(store.Name));
-                analyticsEcommerceScript = analyticsEcommerceScript.Replace("{TOTAL}", order.OrderTotal.ToString("0.00", usCulture));
-                analyticsEcommerceScript = analyticsEcommerceScript.Replace("{TAX}", order.OrderTax.ToString("0.00", usCulture));
-                var orderShipping = order.OrderShippingInclTax;
-                analyticsEcommerceScript = analyticsEcommerceScript.Replace("{SHIP}", orderShipping.ToString("0.00", usCulture));
+                var value = property.GetValue(target);
+                if (value is int intValue && intValue > 0)
+                    return intValue;
 
-                var sb = new StringBuilder();
-                var listingPosition = 1;
-                foreach (var item in await _orderService.GetOrderItemsAsync(order.Id))
-                {
-                    if (!string.IsNullOrEmpty(sb.ToString()))
-                        sb.AppendLine(",");
-
-                    var analyticsEcommerceDetailScript = @"_nzm.run( 'ec:addProduct',{
-                    'id': '{PRODUCTSKU}',
-                    'name': '{PRODUCTNAME}',
-                    'category': '{CATEGORYNAME}',
-                    'price': '{UNITPRICE}',
-                    'quantity': {QUANTITY}
-                    });
-                    ";
-
-                    var product = await _productService.GetProductByIdAsync(item.ProductId);
-
-                    var sku = await _productService.FormatSkuAsync(product, item.AttributesXml);
-
-                    if (string.IsNullOrEmpty(sku))
-                        sku = product.Id.ToString();
-
-                    analyticsEcommerceDetailScript = analyticsEcommerceDetailScript.Replace("{PRODUCTSKU}", FixIllegalJavaScriptChars(product.Id.ToString()));
-                    analyticsEcommerceDetailScript = analyticsEcommerceDetailScript.Replace("{PRODUCTNAME}", FixIllegalJavaScriptChars(product.Name));
-                    var category = (await _categoryService.GetCategoryByIdAsync((await _categoryService.GetProductCategoriesByProductIdAsync(item.ProductId)).FirstOrDefault()?.CategoryId ?? 0))?.Name;
-                    analyticsEcommerceDetailScript = analyticsEcommerceDetailScript.Replace("{CATEGORYNAME}", FixIllegalJavaScriptChars(category));
-                    var unitPrice = item.UnitPriceInclTax;
-                    analyticsEcommerceDetailScript = analyticsEcommerceDetailScript.Replace("{QUANTITY}", item.Quantity.ToString());
-                    analyticsEcommerceDetailScript = analyticsEcommerceDetailScript.Replace("{UNITPRICE}", unitPrice.ToString("0.00", usCulture));
-                    sb.AppendLine(analyticsEcommerceDetailScript);
-
-                    listingPosition++;
-                }
-
-                analyticsEcommerceScript = analyticsEcommerceScript.Replace("{DETAILS}", sb.ToString());
-
-                analyticsEcommerceScript += "_nzm.run('send', 'pageview');";
-
-                analyticsTrackingScript += analyticsEcommerceScript;
             }
 
-            return analyticsTrackingScript + "</script>";
+            foreach (var propertyName in new[] { "ProductModel", "ProductDetailsModel", "Model", "Product", "ProductDetails" })
+            {
+                var property = targetType.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public);
+                if (property == null || property.GetIndexParameters().Length > 0)
+                    continue;
+
+                var nested = property.GetValue(target);
+                var nestedId = TryGetProductIdFromObject(nested, depth + 1);
+                if (nestedId.HasValue)
+                    return nestedId;
+            }
+
+            return null;
+        }
+
+        private async Task<Product> GetCurrentProductAsync(object additionalData)
+        {
+            var routeValues = Url.ActionContext.RouteData.Values;
+            var productId =
+                TryParseRouteInt(routeValues.TryGetValue("productId", out var productIdValue) ? productIdValue : null) ??
+                TryParseRouteInt(routeValues.TryGetValue("id", out var idValue) ? idValue : null) ??
+                TryGetProductIdFromObject(additionalData);
+
+            if (!productId.HasValue)
+                return null;
+
+            return await _productService.GetProductByIdAsync(productId.Value);
+        }
+
+        private async Task<string> GetBootstrapScriptAsync(NewsmanRemarketingSettings settings, string currencyCode)
+        {
+            var cartUrl = $"{GetCurrentBaseUrl()}/Plugins/Newsman/Cart?newsman=getCart.json";
+            var remarketingId = FixIllegalJavaScriptChars(settings.NewsmanRemarketingId);
+            var escapedCurrencyCode = FixIllegalJavaScriptChars(currencyCode);
+            var escapedCartUrl = FixIllegalJavaScriptChars(cartUrl);
+
+            return $$"""
+                <script type="text/javascript">
+                var _nzm = _nzm || [];
+                var _nzm_config = _nzm_config || [];
+                _nzm_config["disable_datalayer"] = 1;
+                </script>
+                <script type="text/javascript">
+                var _nzm = _nzm || [];
+                var _nzm_config = _nzm_config || [];
+                (function(w, d, e, f, c, l, n) {
+                    ["identify", "track", "run"].map(function(m) {
+                        w[f][m] = function() {
+                            w[f].push([m].concat([].slice.call(arguments)));
+                        };
+                    });
+                    l = d.createElement(e);
+                    l.async = 1;
+                    l.id = "nzm-tracker";
+                    l.src = (w[c].js_prefix || "https://t.newsmanapp.com") + "/jt/t.js";
+                    l.setAttribute("data-site-id", "{{remarketingId}}");
+                    n = d.getElementsByTagName(e)[0];
+                    n.parentNode.insertBefore(l, n);
+                })(window, document, "script", "_nzm", "_nzm_config");
+                </script>
+                <script type="text/javascript">
+                _nzm.run("require", "ec");
+                _nzm.run("set", "currencyCode", "{{escapedCurrencyCode}}");
+
+                var ajaxurl = "{{escapedCartUrl}}";
+                var isProd = true;
+                var lastCart = sessionStorage.getItem("lastCart");
+                if (lastCart === null) {
+                    lastCart = {};
+                }
+                var lastCartFlag = false;
+                var firstLoad = true;
+                var bufferedXHR = false;
+                var unlockClearCart = true;
+                var isError = false;
+                var secondsAllow = 5;
+                var msRunAutoEvents = 5000;
+                var msClick = new Date();
+                var documentComparer = document.location.hostname;
+                var documentUrl = document.URL;
+                var sameOrigin = (documentUrl.indexOf(documentComparer) !== -1);
+                var startTime, endTime;
+
+                function startTimePassed() {
+                    startTime = new Date();
+                }
+
+                startTimePassed();
+
+                function endTimePassed() {
+                    var flag = false;
+                    endTime = new Date();
+                    var timeDiff = endTime - startTime;
+                    timeDiff /= 1000;
+                    var seconds = Math.round(timeDiff);
+                    if (firstLoad) {
+                        flag = true;
+                    }
+                    if (seconds >= secondsAllow) {
+                        flag = true;
+                    }
+                    return flag;
+                }
+
+                if (sameOrigin) {
+                    NewsmanAutoEvents();
+                    setInterval(NewsmanAutoEvents, msRunAutoEvents);
+                    detectClicks();
+                    detectXHR();
+                    detectFetch();
+                }
+
+                function timestampGenerator(min, max) {
+                    min = Math.ceil(min);
+                    max = Math.floor(max);
+                    return Math.floor(Math.random() * (max - min + 1)) + min;
+                }
+
+                function NewsmanAutoEvents() {
+                    if (!endTimePassed()) {
+                        return;
+                    }
+                    if (isError && isProd === true) {
+                        return;
+                    }
+                    var xhr = new XMLHttpRequest();
+                    if (bufferedXHR || firstLoad) {
+                        var paramChar = "?t=";
+                        if (ajaxurl.indexOf("?") >= 0) {
+                            paramChar = "&t=";
+                        }
+                        var timestamp = paramChar + Date.now() + timestampGenerator(999, 999999999);
+                        try {
+                            xhr.open("GET", ajaxurl + timestamp, true);
+                        } catch (ex) {
+                            isError = true;
+                        }
+                        startTimePassed();
+                        xhr.onload = function () {
+                            if (xhr.status == 200 || xhr.status == 201) {
+                                var response;
+                                try {
+                                    response = JSON.parse(xhr.responseText);
+                                } catch (error) {
+                                    isError = true;
+                                    return;
+                                }
+                                lastCart = JSON.parse(sessionStorage.getItem("lastCart"));
+                                if (lastCart === null) {
+                                    lastCart = {};
+                                }
+                                if ((typeof lastCart !== "undefined") && lastCart.length > 0 && (typeof response !== "undefined") && response.length > 0) {
+                                    var objComparer = response;
+                                    var missingProp = false;
+                                    lastCart.forEach(function (e) {
+                                        if (!e.hasOwnProperty("name")) {
+                                            missingProp = true;
+                                        }
+                                    });
+                                    if (missingProp) {
+                                        objComparer.forEach(function (v) {
+                                            delete v.name;
+                                        });
+                                    }
+                                    if (JSON.stringify(lastCart) === JSON.stringify(objComparer)) {
+                                        lastCartFlag = true;
+                                    } else {
+                                        lastCartFlag = false;
+                                    }
+                                }
+                                if (response.length > 0 && lastCartFlag == false) {
+                                    nzmAddToCart(response);
+                                } else if (response.length == 0 && lastCart.length > 0 && unlockClearCart) {
+                                    nzmClearCart();
+                                }
+                                firstLoad = false;
+                                bufferedXHR = false;
+                            } else {
+                                isError = true;
+                            }
+                        };
+                        try {
+                            xhr.send(null);
+                        } catch (ex) {
+                            isError = true;
+                        }
+                    }
+                }
+
+                function nzmClearCart() {
+                    _nzm.run("ec:setAction", "clear_cart");
+                    _nzm.run("send", "event", "detail view", "click", "clearCart");
+                    sessionStorage.setItem("lastCart", JSON.stringify([]));
+                    unlockClearCart = false;
+                }
+
+                function nzmAddToCart(response) {
+                    _nzm.run("ec:setAction", "clear_cart");
+                    detailviewEvent(response);
+                }
+
+                function detailviewEvent(response) {
+                    _nzm.run("send", "event", "detail view", "click", "clearCart", null, function () {
+                        var products = [];
+                        for (var item in response) {
+                            if (response[item].hasOwnProperty("id")) {
+                                _nzm.run("ec:addProduct", response[item]);
+                                products.push(response[item]);
+                            }
+                        }
+                        _nzm.run("ec:setAction", "add");
+                        _nzm.run("send", "event", "UX", "click", "add to cart");
+                        sessionStorage.setItem("lastCart", JSON.stringify(products));
+                        unlockClearCart = true;
+                    });
+                }
+
+                function detectClicks() {
+                    window.addEventListener("click", function () {
+                        msClick = new Date();
+                    }, false);
+                }
+
+                function detectXHR() {
+                    var proxied = window.XMLHttpRequest.prototype.send;
+                    window.XMLHttpRequest.prototype.send = function () {
+                        var pointer = this;
+                        var validate = false;
+                        var timeValidate = false;
+                        var intervalId = window.setInterval(function () {
+                            if (pointer.readyState != 4) {
+                                return;
+                            }
+                            var msClickPassed = new Date();
+                            var timeDiff = msClickPassed.getTime() - msClick.getTime();
+                            if (timeDiff > 5000) {
+                                validate = false;
+                            } else {
+                                timeValidate = true;
+                            }
+                            var locationValue = pointer.responseURL || "";
+                            if (timeValidate) {
+                                if (locationValue.indexOf("newsman=getCart.json") >= 0) {
+                                    validate = false;
+                                } else if (locationValue.indexOf(window.location.origin) !== -1) {
+                                    validate = true;
+                                }
+                                if (validate) {
+                                    bufferedXHR = true;
+                                    NewsmanAutoEvents();
+                                }
+                            }
+                            clearInterval(intervalId);
+                        }, 1);
+                        return proxied.apply(this, [].slice.call(arguments));
+                    };
+                }
+
+                function detectFetch() {
+                    if (typeof window.fetch !== "function") {
+                        return;
+                    }
+                    var origFetch = window.fetch;
+                    window.fetch = function () {
+                        var reqUrl = "";
+                        try {
+                            var a0 = arguments[0];
+                            reqUrl = typeof a0 === "string" ? a0 : (a0 && a0.url) || "";
+                        } catch (e) {}
+
+                        var promise = origFetch.apply(this, arguments);
+                        promise.then(function (response) {
+                            var validate = false;
+                            var timeValidate = false;
+                            var msClickPassed = new Date();
+                            var timeDiff = msClickPassed.getTime() - msClick.getTime();
+                            if (timeDiff > 5000) {
+                                validate = false;
+                            } else {
+                                timeValidate = true;
+                            }
+
+                            var locationValue = (response && response.url) || reqUrl;
+                            if (timeValidate) {
+                                if (locationValue.indexOf("newsman=getCart.json") >= 0) {
+                                    validate = false;
+                                } else if (locationValue.indexOf(window.location.origin) !== -1) {
+                                    validate = true;
+                                }
+                                if (validate) {
+                                    bufferedXHR = true;
+                                    NewsmanAutoEvents();
+                                }
+                            }
+                        }).catch(function () {});
+
+                        return promise;
+                    };
+                }
+                </script>
+                """;
+        }
+
+        private async Task<string> GetProductDetailsScriptAsync(Product product)
+        {
+            if (product == null)
+                return string.Empty;
+
+            var usCulture = new CultureInfo("en-US");
+            var category = (await _categoryService.GetCategoryByIdAsync(
+                (await _categoryService.GetProductCategoriesByProductIdAsync(product.Id)).FirstOrDefault()?.CategoryId ?? 0))?.Name ?? string.Empty;
+
+            return $$"""
+                <script type="text/javascript">
+                _nzm.run("ec:addProduct", {
+                    "id": "{{FixIllegalJavaScriptChars(product.Id.ToString())}}",
+                    "name": "{{FixIllegalJavaScriptChars(product.Name)}}",
+                    "category": "{{FixIllegalJavaScriptChars(category)}}",
+                    "price": "{{product.Price.ToString("0.00", usCulture)}}"
+                });
+                _nzm.run("ec:setAction", "detail");
+                _nzm.run("send", "pageview");
+                </script>
+                """;
+        }
+
+        private async Task<string> GetPurchaseScriptAsync(Order order)
+        {
+            if (order == null)
+                return string.Empty;
+
+            var store = await _storeContext.GetCurrentStoreAsync();
+            var usCulture = new CultureInfo("en-US");
+            var sb = new StringBuilder();
+
+            foreach (var item in await _orderService.GetOrderItemsAsync(order.Id))
+            {
+                var product = await _productService.GetProductByIdAsync(item.ProductId);
+                if (product == null)
+                    continue;
+
+                var category = (await _categoryService.GetCategoryByIdAsync(
+                    (await _categoryService.GetProductCategoriesByProductIdAsync(item.ProductId)).FirstOrDefault()?.CategoryId ?? 0))?.Name ?? string.Empty;
+
+                sb.AppendLine($$"""
+                    _nzm.run("ec:addProduct", {
+                        "id": "{{FixIllegalJavaScriptChars(product.Id.ToString())}}",
+                        "name": "{{FixIllegalJavaScriptChars(product.Name)}}",
+                        "category": "{{FixIllegalJavaScriptChars(category)}}",
+                        "price": "{{item.UnitPriceInclTax.ToString("0.00", usCulture)}}",
+                        "quantity": {{item.Quantity}}
+                    });
+                    """);
+            }
+
+            return $$"""
+                <script type="text/javascript">
+                {{sb}}
+                _nzm.run("ec:setAction", "purchase", {
+                    "id": "{{FixIllegalJavaScriptChars(order.CustomOrderNumber)}}",
+                    "affiliation": "{{FixIllegalJavaScriptChars(store.Name)}}",
+                    "revenue": {{order.OrderTotal.ToString("0.00", usCulture)}},
+                    "tax": {{order.OrderTax.ToString("0.00", usCulture)}},
+                    "shipping": {{order.OrderShippingInclTax.ToString("0.00", usCulture)}}
+                });
+                _nzm.run("send", "pageview");
+                </script>
+                """;
+        }
+
+        private static string GetPageViewScript()
+        {
+            return """
+                <script type="text/javascript">
+                _nzm.run("send", "pageview");
+                </script>
+                """;
         }
 
         #endregion
 
         #region Methods
 
-        /// <returns>A task that represents the asynchronous operation</returns>
         public async Task<IViewComponentResult> InvokeAsync(string widgetZone, object additionalData)
         {
-            var script = "";
-            var routeData = Url.ActionContext.RouteData;
-
             try
             {
-                var controller = routeData.Values["controller"];
-                var action = routeData.Values["action"];
+                var routeData = Url.ActionContext.RouteData;
+                var controller = routeData.Values["controller"]?.ToString();
+                var action = routeData.Values["action"]?.ToString();
 
-                if (controller == null || action == null)
-                    return Content("");
+                if (string.IsNullOrEmpty(controller) || string.IsNullOrEmpty(action))
+                    return Content(string.Empty);
 
-                var isOrderCompletedPage = controller.ToString().Equals("checkout", StringComparison.InvariantCultureIgnoreCase) &&
-                    action.ToString().Equals("completed", StringComparison.InvariantCultureIgnoreCase);
+                var settings = await GetCurrentSettingsAsync();
+                if (string.IsNullOrWhiteSpace(settings.NewsmanRemarketingId))
+                    return Content(string.Empty);
 
-				if(!isOrderCompletedPage)
-					isOrderCompletedPage = controller.ToString().Equals("order", StringComparison.InvariantCultureIgnoreCase) &&
-                    action.ToString().Equals("details", StringComparison.InvariantCultureIgnoreCase);
+                var script = new StringBuilder();
+                script.AppendLine(await GetBootstrapScriptAsync(settings, await GetCurrentCurrencyCodeAsync()));
 
-                if (isOrderCompletedPage && _newsmanSettings.EnableEcommerce)
+                var isOrderCompletedPage =
+                    (controller.Equals("checkout", StringComparison.InvariantCultureIgnoreCase) &&
+                     action.Equals("completed", StringComparison.InvariantCultureIgnoreCase)) ||
+                    (controller.Equals("order", StringComparison.InvariantCultureIgnoreCase) &&
+                     action.Equals("details", StringComparison.InvariantCultureIgnoreCase));
+
+                var isProductDetailsPage =
+                    controller.Equals("product", StringComparison.InvariantCultureIgnoreCase) &&
+                    action.Equals("productdetails", StringComparison.InvariantCultureIgnoreCase);
+
+                if (isOrderCompletedPage && settings.EnableEcommerce)
                 {
-                    var lastOrder = await GetLastOrderAsync();
-                    script += await GetEcommerceScriptAsync(lastOrder);
+                    script.AppendLine(await GetPurchaseScriptAsync(await GetLastOrderAsync()));
+                }
+                else if (isProductDetailsPage)
+                {
+                    script.AppendLine(await GetProductDetailsScriptAsync(await GetCurrentProductAsync(additionalData)));
                 }
                 else
                 {
-                    script += await GetEcommerceScriptAsync(null);
+                    script.AppendLine(GetPageViewScript());
                 }
+
+                return View("~/Plugins/Widgets.NewsmanRemarketing/Views/PublicInfo.cshtml", script.ToString());
             }
             catch (Exception ex)
             {
-                await _logger.InsertLogAsync(Core.Domain.Logging.LogLevel.Error, "Error creating scripts for Newsman tracking", ex.ToString());
+                await _logger.InsertLogAsync(Nop.Core.Domain.Logging.LogLevel.Error, "Error creating scripts for Newsman tracking", ex.ToString());
+                return Content(string.Empty);
             }
-            return View("~/Plugins/Widgets.NewsmanRemarketing/Views/PublicInfo.cshtml", script);
         }
 
         #endregion
