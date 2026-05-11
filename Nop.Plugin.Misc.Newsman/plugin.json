@@ -2,7 +2,7 @@
   "Group": "Misc",
   "FriendlyName": "Newsman",
   "SystemName": "Misc.Newsman",
-  "Version": "1.00",
+  "Version": "4.60.6",
   "SupportedVersions": [ "4.60" ],
   "Author": "newsman team",
   "DisplayOrder": 1,
