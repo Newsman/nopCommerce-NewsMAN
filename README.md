@@ -4,7 +4,10 @@
 # Instalation
 
 - Download Install folder from Github repository
-- In your Nopcommerce admin panel, go to *Configuration > Plugins*, Click upload Plugins & Themes button", upload the archives one at a time.
+- In your Nopcommerce admin panel, go to *Configuration > Plugins*, Click upload Plugins & Themes button", upload the archives from the `Install` folder one at a time:
+  - `Misc.Newsman.zip`
+  - `Widgets.NewsmanRemarketing.zip`
+- Do not upload the Github source code archive. nopCommerce expects a plugin archive with a single root plugin directory.
 
 ## Activate the plugins
 - Go to *Configuration > Plugins* -> Activate Newsman & Newsman Remarketing
